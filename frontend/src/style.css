@@ -1,0 +1,106 @@
+/* 基礎工具類別 */
+.card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.btn.primary {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #1d4ed8;
+}
+
+.btn.primary:hover {
+  background: #1d4ed8;
+}
+
+.btn.outline {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.btn.outline:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.btn.danger {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+.btn.danger:hover {
+  background: #dc2626;
+}
+
+.btn.ghost {
+  background: transparent;
+  color: #64748b;
+  border-color: transparent;
+}
+
+.btn.ghost:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.btn.sm {
+  font-size: 0.78rem;
+  padding: 4px 8px;
+}
+
+.input {
+  font-size: 0.84rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.input.sm {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+}
+
+.muted {
+  color: #64748b;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}

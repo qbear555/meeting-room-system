@@ -1,0 +1,26 @@
+{
+  "name": "meeting-room-system",
+  "version": "1.0.0",
+  "description": "獨立企業會議室預約管理系統 - 免滾輪雙欄排版、即時排程軸、月曆預約色塊、同仁名單勾選、預約郵件通知、行前五分鐘通知",
+  "main": "server/index.js",
+  "scripts": {
+    "setup": "npm --prefix server install && npm --prefix frontend install",
+    "dev:server": "npm --prefix server run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "node -e \"const { spawn } = require('child_process'); spawn('npm', ['--prefix', 'server', 'run', 'dev'], { stdio: 'inherit', shell: true }); spawn('npm', ['--prefix', 'frontend', 'run', 'dev'], { stdio: 'inherit', shell: true });\"",
+    "build:frontend": "npm --prefix frontend run build",
+    "build": "npm run build:frontend",
+    "start": "node server/index.js"
+  },
+  "keywords": [
+    "meeting-room",
+    "booking-system",
+    "vue3",
+    "nodejs",
+    "sqlite",
+    "schedule",
+    "calendar"
+  ],
+  "author": "TsuMing",
+  "license": "MIT"
+}

@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  meeting-room-system:
+    build: .
+    container_name: meeting-room-system
+    restart: unless-stopped
+    ports:
+      - "3849:3849"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PORT=3849
+      - DB_TYPE=sqlite
+      - DB_PATH=/app/data/meeting_room.db
+      - JWT_SECRET=production_secret_key_please_change
+      # SMTP 郵件通知 (選填)
+      # - SMTP_HOST=smtp.gmail.com
+      # - SMTP_PORT=587
+      # - SMTP_SECURE=false
+      # - SMTP_USER=your_email@gmail.com
+      # - SMTP_PASS=your_app_password
+      # - SMTP_FROM=會議預約系統 <no-reply@company.com>
