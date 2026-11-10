@@ -32,6 +32,15 @@ module.exports = function registerMeetingRooms(app, { db, authMiddleware }) {
       const baseUrl = (process.env.BASE_URL || `http://localhost:${process.env.PORT || 3849}`).replace(/\/+$/, '');
       const subject = `【會議通知】${booking.title}（${booking.booking_date} ${booking.start_time}~${booking.end_time}）`;
       const attendeeNames = attendeeUsers.map((u) => `${u.name} (${u.department || '同仁'})`).join('、 ');
+      const externalGuests = String(booking.external_attendees || '').trim() || (
+        booking.attendees && attendeeNames
+          ? booking.attendees
+              .split(/[、,，]/)
+              .map((s) => s.trim())
+              .filter((s) => s && !attendeeNames.includes(s) && !attendeeUsers.some((u) => s.startsWith(u.name)))
+              .join('、 ')
+          : ''
+      );
 
       const html = `
         <div style="font-family: Arial, 'Noto Sans TC', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
@@ -44,7 +53,8 @@ module.exports = function registerMeetingRooms(app, { db, authMiddleware }) {
             <p style="margin: 6px 0;"><strong>會議日期：</strong> ${escapeHtml(booking.booking_date)}</p>
             <p style="margin: 6px 0;"><strong>會議時間：</strong> <span style="color: #2563eb; font-weight: bold;">${escapeHtml(booking.start_time)} ~ ${escapeHtml(booking.end_time)}</span></p>
             <p style="margin: 6px 0;"><strong>召集人：</strong> ${escapeHtml(organizer.name)}（${escapeHtml(organizer.email || '')}）</p>
-            <p style="margin: 6px 0;"><strong>與會人員：</strong> ${escapeHtml(attendeeNames)}</p>
+            <p style="margin: 6px 0;"><strong>與會同仁：</strong> ${escapeHtml(attendeeNames || '全體同仁')}</p>
+            ${externalGuests ? `<p style="margin: 6px 0;"><strong>外部訪客／貴賓：</strong> <span style="color: #b45309; font-weight: bold; background: #fef3c7; padding: 2px 8px; border-radius: 4px;">👥 ${escapeHtml(externalGuests)}</span></p>` : ''}
           </div>
           <p style="margin-top: 20px;">
             <a href="${baseUrl}" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold;">
@@ -56,10 +66,13 @@ module.exports = function registerMeetingRooms(app, { db, authMiddleware }) {
         </div>
       `;
 
+      const text = `【會議通知】${booking.title}\n時間：${booking.booking_date} ${booking.start_time}~${booking.end_time}\n地點：${room?.name || '會議室'}\n召集人：${organizer.name}\n與會同仁：${attendeeNames}${externalGuests ? `\n外部訪客：${externalGuests}` : ''}\n連結：${baseUrl}`;
+
       for (const email of emails) {
         await mail.sendMail({
           to: email,
           subject,
+          text,
           html,
         });
       }
@@ -231,6 +244,7 @@ module.exports = function registerMeetingRooms(app, { db, authMiddleware }) {
         attendee_count,
         attendees,
         attendee_ids,
+        external_attendees,
         notify_email,
       } = req.body || {};
 
@@ -283,8 +297,8 @@ module.exports = function registerMeetingRooms(app, { db, authMiddleware }) {
           INSERT INTO meeting_bookings (
             room_id, user_id, title, description, booking_date,
             start_time, end_time, start_datetime, end_datetime,
-            attendee_count, attendees, attendee_ids, notify_email, status
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed')
+            attendee_count, attendees, attendee_ids, external_attendees, notify_email, status
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed')
         `)
         .run(
           room_id,
@@ -299,6 +313,7 @@ module.exports = function registerMeetingRooms(app, { db, authMiddleware }) {
           attendee_count || 1,
           attendees || '',
           cleanAttendeeIds.join(','),
+          String(external_attendees || '').trim(),
           shouldNotify
         );
 
@@ -342,6 +357,7 @@ module.exports = function registerMeetingRooms(app, { db, authMiddleware }) {
         attendee_count = booking.attendee_count,
         attendees = booking.attendees,
         attendee_ids,
+        external_attendees,
         notify_email,
       } = req.body || {};
 
@@ -377,13 +393,19 @@ module.exports = function registerMeetingRooms(app, { db, authMiddleware }) {
           ? String(attendee_ids).split(',').map((x) => x.trim()).filter(Boolean)
           : booking.attendee_ids.split(',').filter(Boolean);
 
+      const extAtts =
+        external_attendees !== undefined
+          ? String(external_attendees).trim()
+          : (booking.external_attendees || '');
+
       const shouldNotify = notify_email === false || notify_email === 0 ? 0 : 1;
 
       db.prepare(`
         UPDATE meeting_bookings
         SET room_id = ?, title = ?, description = ?, booking_date = ?,
             start_time = ?, end_time = ?, start_datetime = ?, end_datetime = ?,
-            attendee_count = ?, attendees = ?, attendee_ids = ?, notify_email = ?,
+            attendee_count = ?, attendees = ?, attendee_ids = ?,
+            external_attendees = ?, notify_email = ?,
             updated_at = datetime('now', 'localtime')
         WHERE id = ?
       `).run(
@@ -398,6 +420,7 @@ module.exports = function registerMeetingRooms(app, { db, authMiddleware }) {
         attendee_count,
         attendees || '',
         cleanAttendeeIds.join(','),
+        extAtts,
         shouldNotify,
         bookingId
       );

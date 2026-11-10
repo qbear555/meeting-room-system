@@ -41,6 +41,7 @@ const SQLITE_DDL = `
     attendee_count INTEGER DEFAULT 1,
     attendees TEXT DEFAULT '',
     attendee_ids TEXT DEFAULT '',
+    external_attendees TEXT DEFAULT '',
     notify_email INTEGER NOT NULL DEFAULT 1,
     status TEXT NOT NULL DEFAULT 'confirmed' CHECK(status IN ('confirmed', 'cancelled')),
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),

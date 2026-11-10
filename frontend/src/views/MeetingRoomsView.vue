@@ -558,10 +558,16 @@
               <!-- 外部同仁 / 貴賓補充 -->
               <div>
                 <label class="modal-label">外部訪客 / 其他備註人員</label>
+                <div
+                  v-if="isReadOnly"
+                  style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:0.82rem;color:#1e293b"
+                >
+                  {{ externalAttendees || '無外部訪客' }}
+                </div>
                 <input
+                  v-else
                   v-model="externalAttendees"
                   type="text"
-                  :disabled="isReadOnly"
                   placeholder="例如：汎佳顧問、外部會計師"
                   class="input sm"
                   style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1"
@@ -1080,7 +1086,26 @@ function openBookingModal(initial = {}) {
       .map((s) => Number(s.trim()))
       .filter((n) => n > 0);
     selectedAttendeeIds.value = idList;
-    externalAttendees.value = '';
+
+    // 完整還原原本注記的外部訪客內容
+    if (initial.external_attendees !== undefined && initial.external_attendees !== null && String(initial.external_attendees).trim()) {
+      externalAttendees.value = String(initial.external_attendees).trim();
+    } else if (initial.attendees) {
+      // 向下相容：從已儲存的 attendees 字串中解析非內部同仁名稱
+      const internalNames = allUsers.value
+        .filter((u) => idList.includes(u.id))
+        .map((u) => `${u.name} (${u.department || '同仁'})`);
+      const allParts = String(initial.attendees)
+        .split(/[、,，]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const externals = allParts.filter(
+        (p) => !internalNames.includes(p) && !allUsers.value.some((u) => p.startsWith(u.name))
+      );
+      externalAttendees.value = externals.join('、 ');
+    } else {
+      externalAttendees.value = '';
+    }
 
     bookingForm.value = {
       room_id: initial.room_id,
@@ -1144,6 +1169,7 @@ async function submitBooking() {
       description: '',
       attendees: combinedAttendees || bookingForm.value.attendees,
       attendee_ids: selectedAttendeeIds.value.join(','),
+      external_attendees: externalAttendees.value.trim(),
       attendee_count: Math.max(1, chosenUsers.length + (externalAttendees.value.trim() ? 1 : 0)),
       notify_email: 1, // 預設一律自動發送通知信
     };
